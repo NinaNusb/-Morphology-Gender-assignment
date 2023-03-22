@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+spacy = "*"
+numpy = "*"
+pandas = "*"
 
 [dev-packages]
 
