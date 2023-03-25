@@ -8,6 +8,7 @@ spacy = "*"
 numpy = "*"
 pandas = "*"
 scrapy = "*"
+pytest = "*"
 
 [dev-packages]
 
