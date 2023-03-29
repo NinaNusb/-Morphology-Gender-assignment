@@ -2,11 +2,7 @@ import spacy
 import pandas as pd
 from typing import List, Tuple
 from spacy.language import Language
- 
-
-
-base = '../.../'
-filename = '_cleaned_data.json'
+from collections import namedtuple
 
 
 
@@ -16,53 +12,70 @@ def split_df(df: pd.DataFrame)-> List[Tuple[str, pd.DataFrame]]:
     dataFrames
 
     returns:
-        list: tuples (language, sub dataFrame)
+        list: namedtuple (lang, df)
     """
-    languages = [lang for lang in df['lang'].unique()]
-    sub_dfs = [df[df['lang'] == lang] for lang in languages]
-    return [(lang, sub_df) for lang, sub_df in zip(languages, sub_dfs)]
+    Sub_df = namedtuple('Sub_df', ['lang', 'df'])
+    languages = df['lang'].unique().tolist()
+    dataframes = [df[df['lang'] == lang] for lang in languages]
+    return [Sub_df(lang, sub_df) for lang, sub_df in zip(languages, dataframes)]
 
 
 def sub_df_and_model(df: pd.DataFrame)-> List[Tuple[pd.DataFrame, Language]]:
     """
-    maps sub dataFrames to its appropriate SpaCy language model
-
+    
     """
+    Model = namedtuple('Model', ['lang', 'nlp'])
+    Df_nlp = namedtuple('Df_and_Model', ['df', 'nlp'])
     sub_dfs = split_df(df) # list of all sub DataFrames based on language
     d = {'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Polish': 'pl'}
-    # list of tuples (language, spacy language model)
-    models = [(lang, spacy.load(lang + '_core_news_sm')) for lang in d.values()]
-    return [(sub_df[1], model[1]) for sub_df, model in zip(sub_dfs, models)]
+    models = [Model(lang, spacy.load(lang + '_core_news_sm')) for lang in d.values()]
+    return [Df_nlp(sub_df.df, model.nlp) for sub_df, model in zip(sub_dfs, models)]
 
 
-
-def clean_dfs(df: pd.DataFrame):
-    """ 
-    checks the POS tagging of every noun in a sub dataFrame via SpaCy
+def good_pos_list(tup: Tuple[List[str], Language])-> List[str]:
+    """
+    takes in a namedtuple, uses the list of nouns stored in tup.words
+    and passes each word into SpaCy POS tagger, appending only the nouns
+    NOT labeled as Proper Nouns
 
     returns:
-        dfs(list): sub dataFrames
+        list: nouns (str)
     """
-    dfs_and_models = sub_df_and_model(df)
-    dfs = []
-    for tup in dfs_and_models: # fore every tuple (sub DataFrame, spacy model)
-        res = []
-        sub_df, nlp = tup # unpack tuple
-        words = pd.Series(sub_df['noun']).tolist() # list of all str values in 'noun'
-        for word in words: # for each word in list
-            doc = nlp(word) # create a doc via appropriate spacy model for a particular language
-            if doc[0].pos_ != 'PROPN': # since just one word is in doc, get its POS, if NOT a Proper Noun
-                res.append(word) # then append it to a list
-        dfs.append(sub_df[sub_df['noun'].isin(res)]) # create a new sub dataFrame IF 'noun' is in our list of non-proper nouns
-    return dfs # return the new list of sub dataFrames
+    nlp = tup.nlp
+    text = " ".join(tup.words) # all nouns from list into a str
+    nlp.max_length = len(text) # increase the length the parser can handle
+    doc = nlp(text) 
+    return [token.text for token in doc if token.pos_ != 'PROPN']
 
 
-def sub_to_json(sub_dfs: List[pd.DataFrame]):
+def clean_df(df: pd.DataFrame)-> List[pd.DataFrame]:
+    """
+    takes in a DataFrame, creates sub dataframes based on each unique language,
+    then takes each word found in each sub dataframe and passes it into SpaCy
+    POS tagger and filters out nouns NOT labeled as Proper Nouns, utlimately
+    return a list of sub dataframes complelety populated by nouns in each
+    given language.
+
+    returns:
+        res(list): list of sub dataframes per language
+    """
+    Data = namedtuple('Data', ['words', 'nlp'])
+    df_and_nlp = sub_df_and_model(df) # sub dataFrames and spacy nlp models
+    res = [] # empty list to hold results
+    for tup in df_and_nlp: # for every tuple (sub DataFrame, spacy model)
+        data = Data(pd.Series(tup.df['noun']).tolist(), tup.nlp) # create a Data namedtuple (list of nouns, specific language model)
+        res.append(tup.df[tup.df['noun'].isin(good_pos_list(data))]) # append a sub DataFrame per language with nouns verified as non-proper nouns via SpaCy
+    return res # return the new list of sub dataFrames
+
+
+def sub_to_json(sub_dfs: List[pd.DataFrame])-> None:
     """
     takes a list of sub dataFrames and creates a json for each
     the name of the file is modified by the particular language the sub DataFrame
     represents
     """
-    for sub in sub_dfs:
-        lang = sub.iloc[0][2] # get value at first row, 3 column ('lang'): Ex: Spanish, French, etc
-        sub.to_json(base + lang + filename, orient='split')
+    base = '../../data/'
+    filename = '_cleaned_data.json'
+    for df in sub_dfs:
+        lang = df['lang'].unique().tolist()[0] # get only value in column 'lang'
+        df.to_json(base + lang + filename, orient='split')
