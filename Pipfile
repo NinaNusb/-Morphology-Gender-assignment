@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-spacy = "*"
 numpy = "*"
 pandas = "*"
 scrapy = "*"
 pytest = "*"
 scikit-learn = "*"
+spacy = "*"
 
 [dev-packages]
 ipykernel = "*"
