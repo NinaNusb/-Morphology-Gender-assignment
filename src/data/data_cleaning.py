@@ -79,3 +79,6 @@ def sub_to_json(sub_dfs: List[pd.DataFrame])-> None:
     for df in sub_dfs:
         lang = df['lang'].unique().tolist()[0] # get only value in column 'lang'
         df.to_json(base + lang + filename, orient='split')
+
+def initial_filter(df):
+    return df[(~df['noun'].str.contains('-| |\.|1|2|3|4|5|6|7|8|9|0')) & (~df['noun'].str.isupper())]
