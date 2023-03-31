@@ -10,6 +10,7 @@ scrapy = "*"
 pytest = "*"
 scikit-learn = "*"
 spacy = "*"
+ipynb = "*"
 
 [dev-packages]
 ipykernel = "*"
