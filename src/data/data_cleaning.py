@@ -80,7 +80,7 @@ def add_lemma(tup: Tuple[List[str], Language])-> List[str]:
     return pd.merge(lemma_df, filtered_df, on=['noun'], how='inner')
 
 
-def clean_df(df: pd.DataFrame)-> List[pd.DataFrame]:
+def clean_df(df: pd.DataFrame)-> pd.DataFrame:
     """
     takes in a DataFrame, creates sub dataframes based on each unique language,
     then takes each word found in each sub dataframe and passes it into SpaCy
@@ -98,3 +98,15 @@ def clean_df(df: pd.DataFrame)-> List[pd.DataFrame]:
         data = Data(pd.Series(df['noun']).tolist(), tup.nlp, df)
         res.append(add_lemma(data))
     return pd.concat(res)
+
+
+def raw_json_to_clean_df(path: str)-> pd.DataFrame:
+    """
+    reads in raw data json file , applies filters, 
+    and returns a final and clean df to be used on an NLP model
+    
+    returns:
+        pd.DataFrame
+    """
+    filtered_df = initial_filter(pd.read_json(path))
+    return clean_df(filtered_df)
