@@ -37,26 +37,27 @@ def tune_k(X_train, y_train, k_range=range(1, 31)):
     optimal_k = k_range[cv_scores.index(max(cv_scores))]
     return optimal_k
 
+df = pd.read_csv('../data/cleaned_data.csv')
 # French data
-df_french = pd.read_csv('../../data/French_cleaned_data.csv')
+df_french = df[df['lang'] == 'French']
 X_french, y_french = encode_nouns(df_french)
 X_train_fr, X_test_fr, y_train_fr, y_test_fr = train_test_split(X_french, y_french, test_size=0.2, random_state=42)
 french_predicted_gender = predict_gender_kNN(X_train_fr, y_train_fr, k=3, new_input=X_test_fr)
 
 # German data
-df_german = pd.read_csv('../../data/German_cleaned_data.csv')
+df_german = df[df['lang'] == 'German']
 X_ger, y_ger = encode_nouns(df_german)
 X_train_ger, X_test_ger, y_train_ger, y_test_ger = train_test_split(X_ger, y_ger, test_size=0.2, random_state=42)
 german_predicted_gender = predict_gender_kNN(X_train_ger, y_train_ger, k=3, new_input=X_test_ger)
 
 # Polish data
-df_polish = pd.read_csv('../../data/Polish_cleaned_data.csv')
+df_polish = df[df['lang'] == 'Polish']
 X_polish, y_polish = encode_nouns(df_polish)
 X_train_polish, X_test_polish, y_train_polish, y_test_polish = train_test_split(X_polish, y_polish, test_size=0.2, random_state=42)
 polish_predicted_gender = predict_gender_kNN(X_train_polish, y_train_polish, k=3, new_input=X_test_polish)
 
 # Spanish data
-df_spanish = pd.read_csv('../../data/Spanish_cleaned_data.csv')
+df_spanish = df[df['lang'] == 'Spanish']
 X_sp, y_sp = encode_nouns(df_spanish)
 X_train_sp, X_test_sp, y_train_sp, y_test_sp = train_test_split(X_sp, y_sp, test_size=0.2, random_state=42)
 spanish_predicted_gender = predict_gender_kNN(X_train_sp, y_train_sp, k=3, new_input=X_test_sp)
