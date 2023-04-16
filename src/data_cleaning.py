@@ -26,7 +26,7 @@ def initial_filter(df: pd.DataFrame)-> pd.DataFrame:
      returns:
           pd.DataFrame
      """
-     filtered = df[(~df['noun'].str.contains('-| |\.|1|2|3|4|5|6|7|8|9|0')) & (~df['noun'].str.isupper()) & (df['noun'].str.len > 3)]
+     filtered = df[(~df['noun'].str.contains('-| |\.|1|2|3|4|5|6|7|8|9|0')) & (~df['noun'].str.isupper()) & (df['noun'].str.len() > 4)]
      dfs = split_df(filtered)
      return pd.concat([df.drop_duplicates(subset="noun", keep=False) for df in dfs])
 
