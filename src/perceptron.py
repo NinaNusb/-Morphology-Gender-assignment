@@ -2,6 +2,7 @@ import pandas as pd
 from sklearn.linear_model import Perceptron
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+from sklearn.dummy import DummyClassifier
 import matplotlib.pyplot as plt
 
 
@@ -19,7 +20,7 @@ le = LabelEncoder()
 df["encoded_noun"] = le.fit_transform(df["noun"])
 
 # separate data by language
-datasets = [df[df["lang"] == lang] for lang in set(df["lang"])]
+datasets = [df[df["lang"] == lang] for lang in sorted(set(df["lang"]))]
 
 # run perceptron algorithm for predicting gender on each dataset
 scores = []
@@ -27,13 +28,20 @@ baseline_scores = []
 for dataset in datasets:
     X, y = get_data(dataset)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-    clf = Perceptron(early_stopping=True)
+    clf = Perceptron(random_state=42)
     clf.fit(X_train, y_train)
     scores.append(clf.score(X_test, y_test))
 
+    # get baseline scores
+    dummy_clf = DummyClassifier(strategy="most_frequent")
+    dummy_clf.fit(X_train, y_train)
+    baseline_scores.append(dummy_clf.score(dummy_clf.predict(X_test), y_test))
+
+print(scores)
+print(baseline_scores)
 
 # Plot the accuracies for each dataset
-plt.bar(list(set(df["lang"])), scores)
+plt.bar(sorted(list(set(df["lang"]))), scores)
 plt.title('Accuracy of Perceptron classifier on different datasets')
 plt.xlabel('Dataset')
 plt.ylabel('Accuracy')
@@ -41,12 +49,3 @@ plt.show()
 
 ########################################################################
 # TODO 
-# compare results with a baseline performance
-# a source of inspiration:
-# zero rule algorithm for classification
-# source: https://machinelearningmastery.com/implement-baseline-machine-learning-algorithms-scratch-python/
-def zero_rule_algorithm_classification(train, test):
- output_values = [row[-1] for row in train]
- prediction = max(set(output_values), key=output_values.count)
- predicted = [prediction for i in range(len(test))]
- return predicted
