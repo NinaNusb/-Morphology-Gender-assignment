@@ -3,7 +3,7 @@ from sklearn.preprocessing import OneHotEncoder
 from typing import Tuple
 
 
-def transform(df: pd.DataFrame)-> pd.DataFrame:
+def transform(df: pd.DataFrame, whole_word=False)-> pd.DataFrame:
     """
     Takes in a clean dataframe, reduces it by 3000 examples per gender,
     per langauge. Takes last 3 letters of each noun in df and one hot
@@ -12,9 +12,10 @@ def transform(df: pd.DataFrame)-> pd.DataFrame:
     Returns:
         pd.Dataframe
     """
-    lowest = distribution(df).min()[0]
-    reduced_df = df.groupby(['lang', 'gender'])['noun', 'lemma', 'gender', 'lang'].sample(n=lowest)
-    to_be_encoded = reduced_df['noun'].str[-4:]
+    grouped = distribution(df)
+    lowest = int(grouped.min().min())
+    reduced_df = df.groupby(['lang', 'gender'])['noun', 'gender', 'lang'].sample(n=lowest)
+    to_be_encoded = reduced_df['noun'] if whole_word else reduced_df['noun'].str[-3:]
     ohe = OneHotEncoder(sparse=False)
     transformed = ohe.fit_transform(to_be_encoded.to_numpy().reshape(-1, 1))
     transformed_df = pd.DataFrame(transformed)
@@ -42,4 +43,4 @@ def distribution(df: pd.DataFrame)-> pd.DataFrame:
     masculine   8424   3722   5491    5590
     neuter         -   3160   5571       -
     """
-    return df.groupby('gender')['lang'].value_counts().unstack(fill_value='-')
+    return df.groupby(['gender','lang']).size().unstack()
