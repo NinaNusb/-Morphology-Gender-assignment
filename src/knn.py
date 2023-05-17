@@ -1,10 +1,12 @@
 import pandas as pd
 import sklearn
+import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+from sklearn.dummy import DummyClassifier
 
 def predict_gender_kNN(X_train, y_train, k, new_input):
     knn= KNeighborsClassifier(n_neighbors=k)
@@ -77,6 +79,7 @@ k_values = range(1, 11)
 
 # Create an empty list to store the accuracies for each dataset
 accuracies = []
+baseline_scores = []
 
 # Loop over the datasets
 for dataset in datasets:
@@ -99,9 +102,25 @@ for dataset in datasets:
     accuracy = knn.score(X_test, y_test)
     accuracies.append(accuracy)
 
+    # get baseline scores
+    dummy_clf = DummyClassifier(strategy="most_frequent")
+    dummy_clf.fit(X_train, y_train)
+    baseline_scores.append(dummy_clf.score(dummy_clf.predict(X_test), y_test))
+
+
 # Plot the accuracies for each dataset
-plt.bar(dataset_names, accuracies)
+languages = sorted(list(set(df["lang"])))
+x = np.arange(len(languages))  # the label locations
+width = 0.4  # the width of the bars
+
+plt.bar(x, accuracies, width, color="DarkSlateGray", label="kNN performance")      # plot of model performance
+plt.bar(x+width, baseline_scores, width, color="#80b3b3", label="baseline performance")     # plot of baseline performance
 plt.title('Accuracy of kNN classifier on different datasets')
 plt.xlabel('Dataset')
 plt.ylabel('Accuracy')
+plt.xticks(x+width/2, languages)
+plt.legend()
 plt.show()
+
+# Plot the accuracies for each dataset
+# plt.bar(dataset_names, accuracies)
