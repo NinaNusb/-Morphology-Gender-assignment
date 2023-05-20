@@ -41,7 +41,9 @@ def distribution(df: pd.DataFrame)-> pd.DataFrame:
     """
     return df.groupby(['gender','lang']).size().unstack()
 
+
 def transform(df):
+    """ transforms all values in a dataframe """
     max_length = df['noun'].str.len().max() # 38
 
     def add_filler(word):
@@ -56,7 +58,10 @@ def transform(df):
     df['noun'] = df['noun'].apply(add_filler)
     return df
 
+
 def reduce(df):
+    """ reduces all languages and genders by an equal amount
+    """
     grouped = distribution(df) # get distribution of languages and gender
     lowest_value = int(grouped.min().min()) # select lowest count
     return df.groupby(['lang', 'gender'])['noun', 'gender', 'lang'].sample(n=lowest_value) # reduce each language and gender by lowest_value
