@@ -3,7 +3,7 @@ from sklearn.preprocessing import OneHotEncoder
 from typing import Tuple
 
 
-def transform(df: pd.DataFrame, whole_word=False)-> pd.DataFrame:
+def encode(df: pd.DataFrame, n=0)-> pd.DataFrame:
     """
     Takes in a clean dataframe, reduces it by 3000 examples per gender,
     per langauge. Takes last 3 letters of each noun in df and one hot
@@ -12,16 +12,12 @@ def transform(df: pd.DataFrame, whole_word=False)-> pd.DataFrame:
     Returns:
         pd.Dataframe
     """
-    grouped = distribution(df)
-    lowest = int(grouped.min().min())
-    reduced_df = df.groupby(['lang', 'gender'])['noun', 'gender', 'lang'].sample(n=lowest)
-    to_be_encoded = reduced_df['noun'] if whole_word else reduced_df['noun'].str[-3:]
-    ohe = OneHotEncoder(sparse=False)
-    transformed = ohe.fit_transform(to_be_encoded.to_numpy().reshape(-1, 1))
-    transformed_df = pd.DataFrame(transformed)
-    reduced_df.reset_index(inplace=True, drop=True)
-    return pd.concat([reduced_df, transformed_df], axis=1)
-
+    to_be_encoded = df['noun'].str[-n:] # grab n amount of letters start from the end to encode only
+    ohe = OneHotEncoder(sparse_output=False) # initialize the encoder
+    transformed = ohe.fit_transform(to_be_encoded.to_numpy().reshape(-1, 1)) # encode
+    transformed_df = pd.DataFrame(transformed) # convert to a dataframe
+    df.reset_index(inplace=True, drop=True) # reset indexes
+    return pd.concat([df, transformed_df], axis=1) # create new dataframe of reduced df and transformed df
 
 
 def get_X_y(df: pd.DataFrame)-> Tuple[pd.DataFrame, pd.Series]:
@@ -44,3 +40,23 @@ def distribution(df: pd.DataFrame)-> pd.DataFrame:
     neuter         -   3160   5571       -
     """
     return df.groupby(['gender','lang']).size().unstack()
+
+def transform(df):
+    max_length = df['noun'].str.len().max() # 38
+
+    def add_filler(word):
+        """ preprends n amount #'s to a word 
+        based on a max_length"""
+        if len(word) < max_length: # if word len() is less than the max len()
+            diff = max_length - len(word) # we subtract the current word len() by the max len(): diff
+            return '#' * diff + word # we prepend n(diff) amount of '#'s to the word and then return it
+        return word # if len() of word is NOT less then the max len, then just return it
+
+    # apply function to every value in column 'noun'
+    df['noun'] = df['noun'].apply(add_filler)
+    return df
+
+def reduce(df):
+    grouped = distribution(df) # get distribution of languages and gender
+    lowest_value = int(grouped.min().min()) # select lowest count
+    return df.groupby(['lang', 'gender'])['noun', 'gender', 'lang'].sample(n=lowest_value) # reduce each language and gender by lowest_value
