@@ -64,4 +64,4 @@ def reduce(df):
     """
     grouped = distribution(df) # get distribution of languages and gender
     lowest_value = int(grouped.min().min()) # select lowest count
-    return df.groupby(['lang', 'gender'])['noun', 'gender', 'lang'].sample(n=lowest_value) # reduce each language and gender by lowest_value
+    return df.groupby(['lang', 'gender'])[['noun', 'gender', 'lang']].sample(n=lowest_value) # reduce each language and gender by lowest_value
