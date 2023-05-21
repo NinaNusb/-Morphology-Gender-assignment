@@ -6,6 +6,7 @@ from data_transformation import encode, get_X_y
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.model_selection import train_test_split
+from sklearn.dummy import DummyClassifier
 
 from collections import defaultdict
 
@@ -91,4 +92,12 @@ def experiment_3(df, n=4):
     # p_score = p.score(X_test, y_test) # get score
     results['Perceptron'] = p.score(X_test, y_test)
 
+    # Baseline
+    dummy_clf = DummyClassifier(strategy="most_frequent")
+    dummy_clf.fit(X_train, y_train)
+    results['Baseline'] = dummy_clf.score(X_test, y_test)
+
     return results
+
+
+
