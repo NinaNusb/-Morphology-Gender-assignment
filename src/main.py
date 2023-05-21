@@ -49,10 +49,6 @@ percep_shuffle_df.to_csv('../data/percp_res_lang_shuffle_3_encoding.csv') # save
 # Experiment 3
 exp_3 = experiment_3(reduced_df, 3)
 
-# save results
-whole_df = pd.DataFrame(exp_3)
-whole_df.to_csv('../data/whole_3_encoding.csv') # save as csv
-
 # Step 6: visiualize results
 
 exp_1_visual()
